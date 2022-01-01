@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recipes",
+  "info": {
+    "name": "Recipes",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "servings": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "text"
+    },
+    "ingredients": {
+      "via": "recipe",
+      "collection": "ingredients"
+    }
+  }
+}
