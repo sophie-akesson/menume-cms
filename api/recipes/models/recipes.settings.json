@@ -22,8 +22,12 @@
       "type": "text"
     },
     "ingredients": {
-      "via": "recipe",
-      "collection": "ingredients"
+      "type": "json"
+    },
+    "author": {
+      "plugin": "users-permissions",
+      "model": "user",
+      "via": "recipes"
     }
   }
 }
