@@ -17,7 +17,7 @@ module.exports = {
       ctx.request.body.author = ctx.state.user.id;
       entity = await strapi.services.recipes.create(ctx.request.body);
     }
-    return sanitizeEntity(entity, { model: strapi.models.recipe });
+    return sanitizeEntity(entity, { model: strapi.models.recipes });
   },
 
   /**
