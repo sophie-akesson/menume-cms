@@ -21,13 +21,13 @@
     "description": {
       "type": "text"
     },
-    "ingredients": {
-      "type": "json"
-    },
     "author": {
       "plugin": "users-permissions",
       "model": "user",
       "via": "recipes"
+    },
+    "ingredients": {
+      "type": "json"
     }
   }
 }
