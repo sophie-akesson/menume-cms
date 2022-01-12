@@ -27,7 +27,8 @@
       "via": "recipes"
     },
     "ingredients": {
-      "type": "json"
+      "via": "recipe",
+      "collection": "ingredients"
     }
   }
 }

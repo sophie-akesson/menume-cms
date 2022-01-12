@@ -7,6 +7,28 @@ const { parseMultipartData, sanitizeEntity } = require("strapi-utils");
 
 module.exports = {
   /**
+   * Find and populate recipe and ingredients.
+   *
+   * @return {Object}
+   */
+
+  async findByAuthor(ctx) {
+    let entity;
+
+    const allMenuItems = await strapi.services.menu.find({}, [
+      "recipe",
+      "recipe.author",
+      "recipe.ingredients",
+    ]);
+
+    entity = allMenuItems.filter(
+      (item) => item.recipe.author.username === ctx.query.author
+    );
+
+    return sanitizeEntity(entity, { model: strapi.models.menu });
+  },
+
+  /**
    * Delete all records.
    *
    * @return {Object}
@@ -17,11 +39,18 @@ module.exports = {
 
     if (ctx.is("multipart")) {
       const { data, files } = parseMultipartData(ctx);
-      entity = await strapi.services.menu.delete({}, data, {
-        files,
-      });
+      entity = await strapi.services.menu.delete(
+        { "recipe.author.username": ctx.query.author },
+        data,
+        {
+          files,
+        }
+      );
     } else {
-      entity = await strapi.services.menu.delete({}, ctx.request.body);
+      entity = await strapi.services.menu.delete(
+        { "recipe.author.username": ctx.query.author },
+        ctx.request.body
+      );
     }
 
     return sanitizeEntity(entity, { model: strapi.models.menu });
