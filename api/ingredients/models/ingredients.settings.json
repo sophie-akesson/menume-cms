@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ingredients",
+  "info": {
+    "name": "Ingredients",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "string"
+    },
+    "metric": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "checked": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "recipe": {
+      "via": "ingredients",
+      "model": "recipes"
+    }
+  }
+}
