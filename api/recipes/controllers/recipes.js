@@ -44,7 +44,6 @@ module.exports = {
 
   async update(ctx) {
     const { id } = ctx.params;
-
     let entity;
 
     const [recipes] = await strapi.services.recipes.find({
@@ -53,40 +52,6 @@ module.exports = {
     });
 
     if (!recipes) {
-      return ctx.unauthorized(
-        `Du har inte tillåtelse att utföra denna åtgärd.`
-      );
-    }
-
-    if (ctx.is("multipart")) {
-      const { data, files } = parseMultipartData(ctx);
-      entity = await strapi.services.recipes.update({ id }, data, {
-        files,
-      });
-    } else {
-      entity = await strapi.services.recipes.update({ id }, ctx.request.body);
-    }
-
-    return sanitizeEntity(entity, { model: strapi.models.recipes });
-  },
-
-  /**
-   * Update an ingredient.
-   *
-   * @return {Object}
-   */
-
-  async update(ctx) {
-    const { id } = ctx.params;
-
-    let entity;
-
-    const [recipe] = await strapi.services.recipes.find({
-      id: ctx.params.id,
-      "author.id": ctx.state.user.id,
-    });
-
-    if (!recipe) {
       return ctx.unauthorized(
         `Du har inte tillåtelse att utföra denna åtgärd.`
       );
@@ -112,11 +77,9 @@ module.exports = {
 
   async delete(ctx) {
     const { id } = ctx.params;
-
     let entity;
 
-    const [recipes] = await strapi.services.recipes.find({
-      id: ctx.params.id,
+    const recipes = await strapi.services.recipes.find({
       "author.id": ctx.state.user.id,
     });
 
@@ -125,6 +88,41 @@ module.exports = {
         `Du har inte tillåtelse att utföra denna åtgärd.`
       );
     }
+
+    const menu = await strapi.services.menu.find({}, [
+      "recipe",
+      "recipe.author",
+    ]);
+
+    if (menu.length) {
+      const menuByAuthor = menu.filter(
+        (item) => item.recipe.author.username === ctx.query.author
+      );
+
+      //Kolla ifall reptet är en del av en befintlig meny
+      const shouldNotDelete = menuByAuthor.some(
+        (menuItem) => menuItem.recipe.id === id
+      );
+
+      //Är receptet en del av en befintlig meny får man inte ta bort det
+      if (shouldNotDelete) {
+        return ctx.forbidden(`Du har inte tillåtelse att utföra denna åtgärd.`);
+      }
+    }
+
+    let ingredients = [];
+
+    recipes.forEach((recipe) => {
+      if (recipe.id === parseInt(id)) {
+        recipe.ingredients.forEach((ingredient) => {
+          ingredients.push(ingredient.id);
+        });
+      }
+    });
+
+    ingredients.forEach(async (item) => {
+      await strapi.services.ingredients.delete({ id: item });
+    });
 
     if (ctx.is("multipart")) {
       const { data, files } = parseMultipartData(ctx);
