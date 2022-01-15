@@ -101,12 +101,14 @@ module.exports = {
 
       //Kolla ifall reptet är en del av en befintlig meny
       const shouldNotDelete = menuByAuthor.some(
-        (menuItem) => menuItem.recipe.id === id
+        (menuItem) => menuItem.recipe.id === parseInt(id)
       );
 
       //Är receptet en del av en befintlig meny får man inte ta bort det
       if (shouldNotDelete) {
-        return ctx.forbidden(`Du har inte tillåtelse att utföra denna åtgärd.`);
+        return ctx.forbidden(
+          `Du kan inte ta bort ett recept som finns i din befintliga meny.`
+        );
       }
     }
 
