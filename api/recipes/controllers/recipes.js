@@ -44,17 +44,67 @@ module.exports = {
 
   async update(ctx) {
     const { id } = ctx.params;
+    const { ingredients } = ctx.request.body;
+    let updatedRecipe = ctx.request.body;
     let entity;
 
-    const [recipes] = await strapi.services.recipes.find({
+    const [recipe] = await strapi.services.recipes.find({
       id: ctx.params.id,
       "author.id": ctx.state.user.id,
     });
 
-    if (!recipes) {
+    if (!recipe) {
       return ctx.unauthorized(
         `Du har inte tillåtelse att utföra denna åtgärd.`
       );
+    }
+
+    //Make new array of any removed ingredients
+    const removedIngredients = recipe.ingredients.filter(
+      ({ id: id1 }) => !ingredients.some(({ id: id2 }) => id1 === id2)
+    );
+
+    //Delete removed ingredients
+    if (removedIngredients) {
+      removedIngredients.forEach(async (ingredientToRemove) => {
+        const removedIngredient = await strapi.services.ingredients.delete({
+          id: ingredientToRemove.id,
+        });
+
+        for (let i = 0; i < updatedRecipe.ingredients.length; i++) {
+          if (updatedRecipe.ingredients[i].id === removedIngredient.id) {
+            updatedRecipe.ingredients.splice(i, 1);
+            break;
+          }
+        }
+      });
+    }
+
+    //Make new array of any added ingredients
+    const addedIngredients = ingredients.filter(
+      ({ id: id1 }) => !recipe.ingredients.some(({ id: id2 }) => id1 === id2)
+    );
+
+    //Post new ingredients
+    if (addedIngredients) {
+      addedIngredients.forEach(async (ingredientToAdd) => {
+        const newIngredient = {
+          amount: ingredientToAdd.amount,
+          metric: ingredientToAdd.metric,
+          name: ingredientToAdd.name,
+          category: ingredientToAdd.category,
+        };
+        const postedIngredient = await strapi.services.ingredients.create(
+          newIngredient
+        );
+
+        for (let i = 0; i < updatedRecipe.ingredients.length; i++) {
+          if (updatedRecipe.ingredients[i].id === "") {
+            updatedRecipe.ingredients[i].id = postedIngredient.id;
+            break;
+          }
+        }
+      });
     }
 
     if (ctx.is("multipart")) {
@@ -63,7 +113,7 @@ module.exports = {
         files,
       });
     } else {
-      entity = await strapi.services.recipes.update({ id }, ctx.request.body);
+      entity = await strapi.services.recipes.update({ id }, updatedRecipe);
     }
 
     return sanitizeEntity(entity, { model: strapi.models.recipes });
