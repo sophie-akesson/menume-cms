@@ -17,6 +17,7 @@
       "unique": true
     },
     "recipe": {
+      "unique": true,
       "model": "recipes"
     }
   }
