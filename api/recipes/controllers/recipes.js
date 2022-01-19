@@ -48,10 +48,21 @@ module.exports = {
     let updatedRecipe = ctx.request.body;
     let entity;
 
+    // console.log(ingredients);
+
     const [recipe] = await strapi.services.recipes.find({
       id: ctx.params.id,
       "author.id": ctx.state.user.id,
     });
+
+    //Reduce fields in recipe.ingredients for next step
+    const recipeIngredients = recipe.ingredients.map((ingredient) => ({
+      id: ingredient.id,
+      amount: ingredient.amount,
+      metric: ingredient.metric,
+      name: ingredient.name,
+      category: ingredient.category,
+    }));
 
     if (!recipe) {
       return ctx.unauthorized(
@@ -104,6 +115,29 @@ module.exports = {
             break;
           }
         }
+      });
+    }
+
+    //Find updated ingredients
+    const updatedIngredients = ingredients.reduce((a, ingredient) => {
+      recipeIngredients.forEach((recipeIngredient) => {
+        if (
+          ingredient.id === recipeIngredient.id &&
+          JSON.stringify(ingredient) !== JSON.stringify(recipeIngredient)
+        ) {
+          a.push(ingredient);
+        }
+      });
+      return a;
+    }, []);
+
+    //Update each updated ingredient
+    if (updatedIngredients) {
+      updatedIngredients.forEach(async (ingredient) => {
+        await strapi.services.ingredients.update(
+          { id: ingredient.id },
+          ingredient
+        );
       });
     }
 
